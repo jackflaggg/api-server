@@ -1,0 +1,17 @@
+version: '3.7'
+services:
+  postgres:
+    image: postgres:13
+    restart: always
+    container_name: api_server
+    ports:
+     - '5433:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME_SQL}
+      POSTGRES_USER: ${USERNAME_SQL}
+      POSTGRES_PASSWORD: ${PASSWORD_SQL}
+
+volumes:
+  postgres_data:

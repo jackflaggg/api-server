@@ -1,19 +1,18 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { LoginDtoService } from '../../../dto/service/login.dto';
-import { UserRepositoryOrm } from '../../../infrastructure/typeorm/user/user.orm.repo';
-import { NotFoundDomainException } from '../../../../../core/exceptions/incubator-exceptions/domain-exceptions';
+import { HttpException, HttpStatus } from '@nestjs/common';
+import { UserRepository } from '../../infrastructure/user.repository';
 
 export class ValidateUserCommand {
-    constructor(public readonly payload: LoginDtoService) {}
+    constructor(public readonly payload: any) {}
 }
 
 @CommandHandler(ValidateUserCommand)
 export class ValidateUserUseCase implements ICommandHandler<ValidateUserCommand> {
-    constructor(private readonly userRepository: UserRepositoryOrm) {}
+    constructor(private readonly userRepository: UserRepository) {}
     async execute(command: ValidateUserCommand) {
         const user = await this.userRepository.findUserByLoginOrEmail(command.payload.loginOrEmail);
         if (!user) {
-            throw NotFoundDomainException.create('Юзер не найден', 'ValidateUserUseCase');
+            throw new HttpException('Юзер не найден', HttpStatus.NOT_FOUND);
         }
         return user.id;
     }

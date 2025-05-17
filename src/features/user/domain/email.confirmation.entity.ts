@@ -1,8 +1,7 @@
 import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
-import { User } from '../user/user.entity';
-import { BaseEntityWithoutDeletedAt } from '../../../../../core/domain/base';
-import { emailConfirmationCreateDto } from '../../../dto/repository/em-conf.create.dto';
-import { EmailConfirmationUpdateDto } from '../../../dto/repository/em-conf.update.dto';
+import { User } from './user.entity';
+import { BaseEntityWithoutDeletedAt } from '../../../core/domain/base.model';
+import { emailConfirmationCreateDto } from '../dto/create.email.confirmation.entity';
 
 @Entity('email_confirmation_to_user')
 export class EmailConfirmationToUser extends BaseEntityWithoutDeletedAt {
@@ -19,9 +18,9 @@ export class EmailConfirmationToUser extends BaseEntityWithoutDeletedAt {
     @JoinColumn({ name: 'user_id' })
     user: User;
     @Column({ name: 'user_id' })
-    userId: number;
+    userId: string;
 
-    static buildInstance(dto: emailConfirmationCreateDto, userId: number): EmailConfirmationToUser {
+    static buildInstance(dto: emailConfirmationCreateDto, userId: string): EmailConfirmationToUser {
         const result = new EmailConfirmationToUser();
 
         result.confirmationCode = dto.confirmationCode;
@@ -29,15 +28,14 @@ export class EmailConfirmationToUser extends BaseEntityWithoutDeletedAt {
         result.isConfirmed = dto.isConfirmed;
         // Устанавливаем userId для связанной сущности
         result.userId = userId;
-        return result as EmailConfirmationToUser;
+        return result;
     }
 
-    public updateCodeAndConfirmed(confirmationCode: string, isConfirmed: boolean): void {
-        this.confirmationCode = confirmationCode;
+    public updateCodeAndConfirmed(isConfirmed: boolean): void {
         this.isConfirmed = isConfirmed;
     }
 
-    public updateUserToCodeAndDate(dto: EmailConfirmationUpdateDto) {
+    public updateUserToCodeAndDate(dto: emailConfirmationCreateDto) {
         this.confirmationCode = dto.confirmationCode;
         this.expirationDate = dto.expirationDate;
         this.isConfirmed = dto.isConfirmed;

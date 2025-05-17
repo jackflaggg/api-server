@@ -1,7 +1,5 @@
 import { z } from 'zod';
-
-export const trimString = (str: string) => str.trim();
-export const emailRegexp = new RegExp('^[\\w-\.]+@([\\w-]+\\.)+[\\w-]{2,4}$');
+import { emailRegexp, trimString } from '../../constants/user.constants';
 
 const UserCreateRequestSchema = z.object({
     login: z.string().trim().min(3).max(10),

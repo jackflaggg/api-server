@@ -7,7 +7,4 @@ export class EmailService {
     async sendEmailRecoveryMessage(email: string, confirmationCode: string): Promise<void | null> {
         return await this.emailAdapter.sendEmail(email, confirmationCode);
     }
-    async sendPasswordRecoveryMessage(email: string, confirmationCode: string): Promise<void | null> {
-        return await this.emailAdapter.sendPassword(email, confirmationCode);
-    }
 }

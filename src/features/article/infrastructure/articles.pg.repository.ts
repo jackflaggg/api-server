@@ -1,40 +1,36 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Article } from '../domain/article.entity';
 import { Repository } from 'typeorm';
-import { NotFoundDomainException } from '../../../../../core/exceptions/incubator-exceptions/domain-exceptions';
-import { Blog } from '../../domain/typeorm/blog.entity';
-import { BlogCreateRepositoryDto } from '../../application/usecases/create-article.usecase';
-import { BlogUpdateDtoApi } from '../../dto/api/blog.update.dto';
 
 @Injectable()
-export class BlogsRepositoryOrm {
-    constructor(@InjectRepository(Blog) private blogsRepositoryTypeOrm: Repository<Blog>) {}
-
-    async findBlogById(blogId: string): Promise<Blog> {
-        const result = await this.blogsRepositoryTypeOrm
-            .createQueryBuilder('b')
-            .where('b.deleted_at IS NULL AND b.id = :blogId', { blogId })
-            .getOne();
-        if (!result) {
-            throw NotFoundDomainException.create('блог не найден', 'blogId');
-        }
-        return result;
-    }
-
-    private async save(entity: Blog): Promise<string> {
-        const result = await this.blogsRepositoryTypeOrm.save(entity);
-        return String(result.id);
-    }
-    async createBlog(dto: BlogCreateRepositoryDto): Promise<string> {
-        const blogEntity = Blog.buildInstance(dto);
-        return this.save(blogEntity);
-    }
-    async deleteBlog(blog: Blog): Promise<string> {
-        blog.makeDeleted();
-        return this.save(blog);
-    }
-    async updateBlog(dto: BlogUpdateDtoApi, blog: Blog): Promise<string> {
-        blog.update(dto);
-        return this.save(blog);
-    }
+export class ArticlesRepository {
+    constructor(@InjectRepository(Article) private readonly articlesRepository: Repository<Article>) {}
+    // private async save(entity: Article) {
+    //     const result = await this.articlesRepository.save(entity);
+    //     return result.id;
+    // }
+    // async createArticle(dto: any): Promise<string> {
+    //     const articleEntity = Article.buildInstance(dto);
+    //     return this.save(articleEntity);
+    // }
+    // async deleteArticle(article: Article): Promise<string> {
+    //     article.makeDeleted();
+    //     return this.save(article);
+    // }
+    // async updateArticle(dto: any, article: Article): Promise<string> {
+    //     article.updateContent(dto.title, dto.description);
+    //     return this.save(article);
+    // }
+    //
+    // async findArticleById(articleId: string): Promise<Article> {
+    //     const result = await this.articlesRepository
+    //         .createQueryBuilder('a')
+    //         .where('a.deleted_at IS NULL AND a.id = :articleId', { articleId })
+    //         .getOne();
+    //     // if (!result) {
+    //     //     throw NotFoundDomainException.create('блог не найден', 'blogId');
+    //     // }
+    //     return result;
+    // }
 }

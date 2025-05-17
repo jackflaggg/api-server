@@ -1,7 +1,5 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
-import { User } from '../user/user.entity';
-import { isNull } from '../../../utils/user/is.null';
-import { DeviceCreateDto } from '../../../dto/repository/device.create.dto';
+import { isNull, User } from './user.entity';
 
 @Entity('security_device_to_user')
 export class SecurityDeviceToUser {
@@ -26,7 +24,7 @@ export class SecurityDeviceToUser {
     @Column({ name: 'user_id' })
     userId: number;
 
-    static buildInstance(dto: DeviceCreateDto, user: User): SecurityDeviceToUser {
+    static buildInstance(dto: any, user: User): SecurityDeviceToUser {
         const session = new SecurityDeviceToUser();
 
         session.deviceId = dto.deviceId;

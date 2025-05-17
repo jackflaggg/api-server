@@ -3,12 +3,12 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { AppConfig } from '../../../core/config/app.config';
 import { UserJwtPayloadDto } from './refresh.strategy';
-import { UserRepositoryOrm } from '../infrastructure/typeorm/user/user.orm.repo';
+import { UserRepository } from '../infrastructure/user.repository';
 
 @Injectable()
 export class AccessTokenStrategy extends PassportStrategy(Strategy, 'jwt-access') {
     constructor(
-        @Inject() private readonly usersRepository: UserRepositoryOrm,
+        @Inject() private readonly usersRepository: UserRepository,
         private readonly coreConfig: AppConfig,
     ) {
         super({
@@ -19,7 +19,7 @@ export class AccessTokenStrategy extends PassportStrategy(Strategy, 'jwt-access'
     }
 
     async validate(payload: UserJwtPayloadDto) {
-        await this.usersRepository.findUserAuth(payload.userId);
+        await this.usersRepository.findUserToAuth(payload.userId);
         return payload;
     }
 }

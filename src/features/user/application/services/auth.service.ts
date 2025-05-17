@@ -1,29 +1,27 @@
-import { UnauthorizedDomainException } from '../../../../core/exceptions/incubator-exceptions/domain-exceptions';
-import { Injectable } from '@nestjs/common';
-import { findUserByLoginOrEmailInterface } from '../../dto/api/user.in.jwt.find.dto';
-import { UserRepositoryOrm } from '../../infrastructure/typeorm/user/user.orm.repo';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { UserRepository } from '../../infrastructure/user.repository';
 import { BcryptService } from './bcrypt.service';
 
 @Injectable()
 export class AuthService {
     constructor(
-        private readonly usersRepository: UserRepositoryOrm,
+        private readonly userRepository: UserRepository,
         private bcryptService: BcryptService,
     ) {}
 
-    async validateUser(userName: string, password: string): Promise<findUserByLoginOrEmailInterface> {
-        const user = await this.usersRepository.findUserByLoginOrEmail(userName);
+    async validateUser(userName: string, password: string) {
+        const user = await this.userRepository.findUserByLoginOrEmail(userName);
 
         if (!user) {
-            throw UnauthorizedDomainException.create();
+            throw new HttpException('не авторизован', HttpStatus.UNAUTHORIZED)
         }
 
         const comparePassword: boolean = await this.bcryptService.comparePassword(password, user.password);
 
         if (!comparePassword) {
-            throw UnauthorizedDomainException.create();
+            throw new HttpException('не авторизован', HttpStatus.UNAUTHORIZED)
         }
 
-        return user as findUserByLoginOrEmailInterface;
+        return user;
     }
 }

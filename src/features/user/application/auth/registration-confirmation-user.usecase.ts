@@ -1,9 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { BadRequestDomainException } from '../../../../../core/exceptions/incubator-exceptions/domain-exceptions';
-import { UserRepositoryOrm } from '../../../infrastructure/typeorm/user/user.orm.repo';
-import { PasswordRecoveryRepositoryOrm } from '../../../infrastructure/typeorm/password/password.orm.recovery.repository';
-import { EmailConfirmationToUser } from '../../../domain/typeorm/email-confirmation/email.confirmation.entity';
-import { EmailConfirmationRepositoryOrm } from '../../../infrastructure/typeorm/email-conf/email.orm.conf.repository';
+import { EmailConfirmationRepository } from '../../infrastructure/email.conf.repository';
+import { UserRepository } from '../../infrastructure/user.repository';
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 export class RegistrationConfirmationUserCommand {
     constructor(public readonly code: string) {}
@@ -12,45 +10,30 @@ export class RegistrationConfirmationUserCommand {
 @CommandHandler(RegistrationConfirmationUserCommand)
 export class RegistrationConfirmationUserUseCase implements ICommandHandler<RegistrationConfirmationUserCommand> {
     constructor(
-        private readonly usersRepository: UserRepositoryOrm,
-        private readonly emailConfirmationRepository: EmailConfirmationRepositoryOrm,
-        private readonly passwordRepository: PasswordRecoveryRepositoryOrm,
+        private readonly usersRepository: UserRepository,
+        private readonly emailConfirmationRepository: EmailConfirmationRepository,
     ) {}
     async execute(command: RegistrationConfirmationUserCommand) {
-        // 1. если я нашел код в другой табличке, значит, ошибка!
-        const recCode = await this.passwordRepository.findCode(command.code);
-
-        if (recCode) {
-            throw BadRequestDomainException.create('этот код предназначен для new-password', 'RegistrationConfirmationUserUseCase');
-        }
-        // 2. ищу код в email_confirmation
+        // 1. ищу данный код в таблице, если его нет, то 404
         const findCode = await this.emailConfirmationRepository.findCodeToEmailRegistration(command.code);
 
-        // P.S. Специфичная обработка ошибки для тестов!
-        if (!findCode || command.code !== findCode.confirmationCode || !(findCode instanceof EmailConfirmationToUser)) {
-            throw BadRequestDomainException.create('код не найден', 'code');
-        }
-
-        // 3. проверка на истекание кода
+        // 2. проверка на истекание кода
         if (findCode.expirationDate !== null && !findCode.isConfirmed) {
             const currentDate = new Date();
-            const expirationDate = new Date(findCode.expirationDate as Date);
+            const expirationDate = new Date(findCode.expirationDate);
 
             if (expirationDate < currentDate) {
-                throw BadRequestDomainException.create('код протух, переобновись!', 'RegistrationConfirmationUserUseCase');
+                throw new HttpException('код протух, переобновись!', HttpStatus.BAD_REQUEST);
             }
         }
 
-        // 4. проверка на подтверждение регистрации
-        if (findCode.isConfirmed && findCode.confirmationCode === '+') {
-            throw BadRequestDomainException.create('подтверждение уже было!', 'RegistrationConfirmationUserUseCase');
+        // 3. проверяю, что код не подтвержден!
+        if (findCode.isConfirmed) {
+            throw new HttpException('подтверждение регистрации уже было!', HttpStatus.BAD_REQUEST);
         }
-
-        // 5. обновляю
-        const confirmationCode = '+';
 
         const isConfirmed = true;
 
-        await this.emailConfirmationRepository.updateCodeAndIsConfirmed(confirmationCode, isConfirmed, findCode);
+        await this.emailConfirmationRepository.updateCodeAndIsConfirmed(isConfirmed, findCode);
     }
 }

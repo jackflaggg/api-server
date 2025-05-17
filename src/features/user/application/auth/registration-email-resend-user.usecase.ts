@@ -1,10 +1,9 @@
+import { EmailService } from '../../../notifications/application/mail.service';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Inject } from '@nestjs/common';
-import { BadRequestDomainException } from '../../../../../core/exceptions/incubator-exceptions/domain-exceptions';
-import { EmailService } from '../../../../notifications/application/mail.service';
-import { UserRepositoryOrm } from '../../../infrastructure/typeorm/user/user.orm.repo';
-import { emailConfirmationData } from '../../../utils/user/email-confirmation-data.admin';
-import { EmailConfirmationRepositoryOrm } from '../../../infrastructure/typeorm/email-conf/email.orm.conf.repository';
+import { HttpException, HttpStatus, Inject } from '@nestjs/common';
+import { UserRepository } from '../../infrastructure/user.repository';
+import { EmailConfirmationRepository } from '../../infrastructure/email.conf.repository';
+import { emailConfirmationData } from '../../utils/user/email.confirmation.ready.data';
 
 export class RegistrationEmailResendUserCommand {
     constructor(public readonly email: string) {}
@@ -13,25 +12,25 @@ export class RegistrationEmailResendUserCommand {
 @CommandHandler(RegistrationEmailResendUserCommand)
 export class RegistrationEmailResendUserUseCase implements ICommandHandler<RegistrationEmailResendUserCommand> {
     constructor(
-        @Inject() private readonly usersRepository: UserRepositoryOrm,
-        @Inject() private readonly emailConfirmationRepository: EmailConfirmationRepositoryOrm,
+        @Inject() private readonly usersRepository: UserRepository,
+        @Inject() private readonly emailConfirmationRepository: EmailConfirmationRepository,
         private readonly mailer: EmailService,
     ) {}
     async execute(command: RegistrationEmailResendUserCommand) {
         const user = await this.usersRepository.findUserByEmailRaw(command.email);
 
         if (!user) {
-            throw BadRequestDomainException.create('юзера не существует', 'email');
+            throw new HttpException('данного юзера не существует', HttpStatus.NOT_FOUND);
         }
 
         if (user.isConfirmed) {
-            throw BadRequestDomainException.create('аккаунт уже был активирован', 'email');
+            throw new HttpException('Данный аккаунт был активирован!', HttpStatus.BAD_REQUEST);
         }
 
         const emailConfirmation = await this.emailConfirmationRepository.findEmailConfirmation(user.id);
 
         if (!emailConfirmation) {
-            throw BadRequestDomainException.create('произошла неожиданная ошибка 🥶', 'emailConfirmation');
+            throw new HttpException('произошла неожиданная ошибка!', HttpStatus.BAD_REQUEST);
         }
 
         const emailConfirmDto = emailConfirmationData();

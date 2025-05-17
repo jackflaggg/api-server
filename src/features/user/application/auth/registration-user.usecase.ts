@@ -1,40 +1,34 @@
+import { AuthRegistrationUserDto } from '../../dto/registration.user.dto';
 import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Inject } from '@nestjs/common';
-import { EmailService } from '../../../../notifications/application/mail.service';
-import { CommonCreateUserCommand } from './common-create-user.usecase';
-import { AuthRegistrationDtoApi } from '../../../dto/api/auth.registration.dto';
-import { BadRequestDomainException } from '../../../../../core/exceptions/incubator-exceptions/domain-exceptions';
-import { UserRepositoryOrm } from '../../../infrastructure/typeorm/user/user.orm.repo';
-import { User } from '../../../domain/typeorm/user/user.entity';
+import { HttpException, HttpStatus, Inject } from '@nestjs/common';
+import { UserRepository } from '../../infrastructure/user.repository';
+import { EmailService } from '../../../notifications/application/mail.service';
+import { User } from '../../domain/user.entity';
+import { CreateUserCommand } from './create-user.usecase';
 
 export class RegistrationUserCommand {
-    constructor(public readonly payload: AuthRegistrationDtoApi) {}
+    constructor(public readonly payload: AuthRegistrationUserDto) {}
 }
 
 @CommandHandler(RegistrationUserCommand)
 export class RegistrationUserUseCase implements ICommandHandler<RegistrationUserCommand> {
     constructor(
-        @Inject() private readonly userRepository: UserRepositoryOrm,
+        @Inject() private readonly userRepository: UserRepository,
         private readonly commandBus: CommandBus,
         private readonly mailer: EmailService,
     ) {}
     async execute(command: RegistrationUserCommand): Promise<void> {
-        // проверяю существует ли юзер, даже если он удален!
         const existingUser = await this.userRepository.findCheckExistUserEntity(command.payload.login, command.payload.email);
 
         if (existingUser) {
-            throw BadRequestDomainException.create(
-                'такой юзер уже существует!',
-                existingUser.login === command.payload.login ? 'login' : 'email',
-            );
+            throw new HttpException('Данный юзер уже существует!', HttpStatus.BAD_REQUEST);
         }
 
-        // создаю юзера
-        const emailConfirmation = await this.commandBus.execute<CommonCreateUserCommand, { userId: number; confirmationCode: string }>(
-            new CommonCreateUserCommand(command.payload),
+        const emailConfirmation = await this.commandBus.execute<CreateUserCommand, { userId: string; confirmationCode: string }>(
+            new CreateUserCommand(command.payload),
         );
 
-        const user: User = await this.userRepository.findUserById(String(emailConfirmation.userId));
+        const user: User = await this.userRepository.findUserById(emailConfirmation.userId);
 
         this.mailer
             .sendEmailRecoveryMessage(command.payload.email, emailConfirmation.confirmationCode)

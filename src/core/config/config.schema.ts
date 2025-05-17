@@ -30,15 +30,7 @@ export const configSchema = z.object({
     usernameSql: z.string().nonempty('Установите переменную окружения USERNAME_SQL, это опасно для безопасности!'),
     passwordSql: z.string().nonempty('Установите переменную окружения PASSWORD_SQL, это опасно для безопасности!'),
     databaseNameSql: z.string().nonempty('Установите переменную окружения DATABASE_NAME_SQL, это опасно для безопасности!'),
-    /* isSwaggerEnabled: z.string().transform(val => {
-        const booleanValue = configValidationUtility.convertToBoolean(val);
-        if (booleanValue === null) {
-            throw new Error(
-                'Установите переменную окружения IS_SWAGGER_ENABLED для включения/отключения Swagger, например: true, доступные значения: true, false',
-            );
-        }
-        return booleanValue;
-    }),*/
+    isSwaggerEnabled: z.boolean(),
     /*includeTestingModule: z.string().transform(val => {
     const booleanValue = configValidationUtility.convertToBoolean(val);
     if (booleanValue === null) {
@@ -49,3 +41,5 @@ export const configSchema = z.object({
     return booleanValue;
 }),*/
 });
+
+export type ConfigType = z.infer<typeof configSchema>;

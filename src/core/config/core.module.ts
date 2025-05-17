@@ -1,10 +1,7 @@
 import { Global, Module } from '@nestjs/common';
-import { AppConfig } from './app.config';
 import { ConfigModule } from '@nestjs/config';
+import { AppConfig } from './app.config';
 
-/**
- * хоть и помечен как глобал, но в апп модуле должен быть зареган!
- */
 @Global()
 @Module({
     imports: [ConfigModule],

@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { Injectable } from '@nestjs/common';
-import { configSchema } from './config.schema';
+import { configSchema, ConfigType } from './config.schema';
 
 /**
  * Сервис для хранения конфигурации приложения.
@@ -32,7 +32,7 @@ export class AppConfig {
 
     constructor(private configService: ConfigService<Record<string, unknown>, true>) {
         const config = {
-            port: this.configService.getOrThrow('PORT'),
+            port: this.configService.get('PORT') || '9000',
             env: this.configService.getOrThrow('NODE_ENV'),
             refreshTokenSecret: this.configService.get('JWT_REFRESH_SECRET'),
             accessTokenSecret: this.configService.get('JWT_ACCESS_SECRET'),
@@ -42,24 +42,24 @@ export class AppConfig {
             adminPassword: this.configService.getOrThrow('ADMIN_PASS'),
             adminEmail: this.configService.getOrThrow('ADMIN_EMAIL'),
             adminEmailPassword: this.configService.getOrThrow('ADMIN_EMAIL_PASSWORD'),
-            ip: this.configService.get('IP_TEST'),
-            userAgent: this.configService.get('USER_AGENT'),
-            typeSql: this.configService.getOrThrow('TYPE_SQL'),
-            hostSql: this.configService.getOrThrow('HOST_SQL'),
-            portSql: this.configService.getOrThrow('PORT_SQL'),
-            usernameSql: this.configService.getOrThrow('USERNAME_SQL'),
-            passwordSql: this.configService.getOrThrow('PASSWORD_SQL'),
-            databaseNameSql: this.configService.getOrThrow('DATABASE_NAME_SQL'),
+            // ip: this.configService.get('IP_TEST'),
+            // userAgent: this.configService.get('USER_AGENT'),
+            typeSql: this.configService.get('TYPE_SQL'),
+            hostSql: this.configService.get('HOST_SQL'),
+            portSql: this.configService.get('PORT_SQL'),
+            usernameSql: this.configService.get('USERNAME_SQL'),
+            passwordSql: this.configService.get('PASSWORD_SQL'),
+            databaseNameSql: this.configService.get('DATABASE_NAME_SQL'),
 
-            isSwaggerEnabled: this.configService.get('IS_SWAGGER_ENABLED'),
-            includeTestingModule: this.configService.get('INCLUDE_TESTING_MODULE'),
+            isSwaggerEnabled: this.configService.get('IS_SWAGGER_ENABLED') === 'true',
+            // includeTestingModule: this.configService.get('INCLUDE_TESTING_MODULE'),
         };
 
         try {
-            const validatedConfig = configSchema.parse(config);
+            const validatedConfig: ConfigType = configSchema.parse(config);
             Object.assign(this, validatedConfig);
         } catch (error) {
-            throw new Error('Ошибка валидации: ' + error.message);
+            throw new Error('Ошибка валидации: ' + (error as Error).message);
         }
     }
 }

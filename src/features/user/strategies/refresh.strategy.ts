@@ -1,14 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
-import { UnauthorizedDomainException } from '../../../core/exceptions/incubator-exceptions/domain-exceptions';
 import { AppConfig } from '../../../core/config/app.config';
-import { UserRepositoryOrm } from '../infrastructure/typeorm/user/user.orm.repo';
-import { SessionsRepositoryOrm } from '../infrastructure/typeorm/sessions/sessions.orm.repository';
+import { UserRepository } from '../infrastructure/user.repository';
 
 export class UserJwtPayloadDto {
     userId: string;
-    deviceId: string;
     iat: number;
     exp: number;
 }
@@ -16,8 +13,7 @@ export class UserJwtPayloadDto {
 @Injectable()
 export class JwtRefreshAuthPassportStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
     constructor(
-        @Inject() private readonly usersRepository: UserRepositoryOrm,
-        @Inject() private readonly securityDevicesRepository: SessionsRepositoryOrm,
+        @Inject() private readonly usersRepository: UserRepository,
         private readonly coreConfig: AppConfig,
     ) {
         super({
@@ -33,21 +29,7 @@ export class JwtRefreshAuthPassportStrategy extends PassportStrategy(Strategy, '
     }
 
     async validate(payload: UserJwtPayloadDto) {
-        await this.usersRepository.findUserAuth(payload.userId);
-
-        const device = await this.securityDevicesRepository.findSessionByDeviceId(payload.deviceId);
-
-        if (!device) {
-            console.log('возможно тут логоут и скидывает!');
-            throw UnauthorizedDomainException.create();
-        }
-
-        const unixTimestamp = Math.floor(device.issuedAt.getTime() / 1000);
-
-        if (unixTimestamp !== payload.iat) {
-            console.log('сессия истекла');
-            throw UnauthorizedDomainException.create();
-        }
+        await this.usersRepository.findUserToAuth(payload.userId);
 
         return payload;
     }
