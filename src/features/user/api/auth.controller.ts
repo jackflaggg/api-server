@@ -19,19 +19,24 @@ import { UserJwtPayloadDto } from '../strategies/refresh.strategy';
 import { ExtractAnyUserFromRequest, ExtractUserFromRequest } from '../../../core/decorators/validate.user';
 import { RefreshTokenUserCommand } from '../application/auth/refresh-token.user.usecase';
 import { LogoutUserCommand } from '../application/auth/logout-user.usecase';
+import { AppConfig } from '../../../core/config/app.config';
 
 @Controller(routerPath.path.auth)
 export class AuthController {
     constructor(
         private readonly commandBus: CommandBus,
         private readonly userQueryRepository: UserQueryRepository,
+        private readonly appConfig: AppConfig
     ) {}
 
     @UseGuards(ThrottlerGuard, LocalAuthGuard)
     @Post('login')
     async login(@Req() req: Request, @Res({ passthrough: true }) res: Response, @Body() dto: AuthLoginDto) {
+        const ipDefault = req.ip ?? this.appConfig.ip;
+        const userAgentDefault = req.headers['user-agent'] ?? this.appConfig.userAgent;
+
         const { jwt, refresh } = await this.commandBus.execute(
-            new LoginUserCommand(dto),
+            new LoginUserCommand(ipDefault, userAgentDefault, req.user),
         );
         res.cookie('refreshToken', refresh, { httpOnly: true, secure: true });
         return {
@@ -77,8 +82,11 @@ export class AuthController {
     @UseGuards(RefreshAuthGuard)
     @Post('refresh-token')
     async refreshToken(@ExtractUserFromRequest() user: UserJwtPayloadDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
+        const ipDefault = req.ip ?? this.appConfig.ip;
+        const userAgentDefault = req.headers['user-agent'] ?? this.appConfig.userAgent;
+
         const { jwt, refresh } = await this.commandBus.execute(
-            new RefreshTokenUserCommand(user.userId, user.userId),
+            new RefreshTokenUserCommand(user.userId, user.deviceId, ipDefault, userAgentDefault),
         );
         res.cookie('refreshToken', refresh, { httpOnly: true, secure: true });
         return {

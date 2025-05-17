@@ -1,11 +1,13 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 import { AppConfig } from '../../../core/config/app.config';
 import { UserRepository } from '../infrastructure/user.repository';
+import { SessionsRepository } from '../infrastructure/session.repository';
 
 export class UserJwtPayloadDto {
     userId: string;
+    deviceId: string;
     iat: number;
     exp: number;
 }
@@ -14,6 +16,7 @@ export class UserJwtPayloadDto {
 export class JwtRefreshAuthPassportStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
     constructor(
         @Inject() private readonly usersRepository: UserRepository,
+        @Inject() private readonly securityDevicesRepository: SessionsRepository,
         private readonly coreConfig: AppConfig,
     ) {
         super({
@@ -30,6 +33,18 @@ export class JwtRefreshAuthPassportStrategy extends PassportStrategy(Strategy, '
 
     async validate(payload: UserJwtPayloadDto) {
         await this.usersRepository.findUserToAuth(payload.userId);
+
+        const device = await this.securityDevicesRepository.findSessionByDeviceId(payload.deviceId);
+
+        if (!device) {
+            throw new HttpException('сессии конец', HttpStatus.UNAUTHORIZED)
+        }
+
+        const unixTimestamp = Math.floor(device.issuedAt.getTime() / 1000);
+
+        if (unixTimestamp !== payload.iat) {
+            throw new HttpException('сессия протухла!', HttpStatus.UNAUTHORIZED)
+        }
 
         return payload;
     }

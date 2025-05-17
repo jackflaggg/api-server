@@ -28,6 +28,7 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { LoginUserUseCase } from './application/auth/login-user.usecase';
 import { AuthService } from './application/services/auth.service';
 import { SecurityDeviceToUser } from './domain/device.entity';
+import { SessionsRepository } from './infrastructure/session.repository';
 
 @Module({
     imports: [
@@ -52,11 +53,11 @@ import { SecurityDeviceToUser } from './domain/device.entity';
         UserQueryRepository,
         UserRepository,
         EmailConfirmationRepository,
+        SessionsRepository,
 
         BasicStrategy,
         AccessTokenStrategy,
         JwtRefreshAuthPassportStrategy,
-
         LocalStrategy,
 
         AdminCreateUserUseCase,

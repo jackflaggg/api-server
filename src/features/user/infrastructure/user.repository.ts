@@ -33,7 +33,20 @@ export class UserRepository {
         }
         return result;
     }
-    async findUserToAuth(id: string) {}
+    async findUserToAuth(id: string) {
+        const result = await this.userRepository
+            .createQueryBuilder('u')
+            .select('u.id AS "userId"')
+            .innerJoin('email_confirmation_to_user', 'em', 'u.id = em.user_id')
+            .where('u.id = :id AND u.deleted_at IS NULL', { id })
+            .getRawOne();
+        if (!result) {
+            throw new HttpException('не авторизован', HttpStatus.UNAUTHORIZED)
+        }
+        return {
+            userId: result.userId,
+        };
+    }
     async findCheckExistUserEntity(login: string, email: string): Promise<{id: string} | null> {
         const result = await this.userRepository
             .createQueryBuilder('u')
