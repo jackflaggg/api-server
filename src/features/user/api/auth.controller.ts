@@ -12,7 +12,7 @@ import { UserRegistrationConfirmationDto } from '../dto/registration-confirmatio
 import { RegistrationConfirmationUserCommand } from '../application/auth/registration-confirmation-user.usecase';
 import { RegistrationEmailResendUserCommand } from '../application/auth/registration-email-resend-user.usecase';
 import { UserRegistrationEmResendDto } from '../dto/registration-email-resend.user.dto';
-import { LoginUserCommand } from '../application/auth/login-user.usecase';
+import { LoginUserCommand, userDtoLocal } from '../application/auth/login-user.usecase';
 import { AuthLoginDto } from '../dto/login.user.dto';
 import { LocalAuthGuard } from '../../../core/guards/local.auth.guard';
 import { UserJwtPayloadDto } from '../strategies/refresh.strategy';
@@ -36,7 +36,7 @@ export class AuthController {
         const userAgentDefault = req.headers['user-agent'] ?? this.appConfig.userAgent;
 
         const { jwt, refresh } = await this.commandBus.execute(
-            new LoginUserCommand(ipDefault, userAgentDefault, req.user),
+            new LoginUserCommand(ipDefault, userAgentDefault, req.user as userDtoLocal),
         );
         res.cookie('refreshToken', refresh, { httpOnly: true, secure: true });
         return {

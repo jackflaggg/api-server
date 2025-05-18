@@ -10,6 +10,7 @@ export class AuthService {
     ) {}
 
     async validateUser(userName: string, password: string) {
+
         const user = await this.userRepository.findUserByLoginOrEmail(userName);
 
         if (!user) {

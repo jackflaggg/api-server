@@ -1,17 +1,18 @@
 import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { HttpException, HttpStatus, Inject } from '@nestjs/common';
+import { Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { AppConfig } from '../../../../core/config/app.config';
 import { randomUUID } from 'node:crypto';
-import { AuthLoginDto } from '../../dto/login.user.dto';
-import { UserRepository } from '../../infrastructure/user.repository';
 import { CreateSessionCommand } from './create-session.command';
-
+export interface userDtoLocal {
+    id: string,
+    password: string
+}
 export class LoginUserCommand {
     constructor(
         public readonly ip: string,
         public readonly userAgent: string,
-        public readonly user: any,
+        public readonly user: userDtoLocal,
     ) {}
 }
 
@@ -21,10 +22,10 @@ export class LoginUserUseCase implements ICommandHandler<LoginUserCommand> {
         @Inject() private readonly jwtService: JwtService,
         private readonly appConfig: AppConfig,
         private readonly commandBus: CommandBus,
-        private readonly userRepository: UserRepository
     ) {}
 
     async execute(command: LoginUserCommand) {
+
         // 1. генерирую девайсАйди
         const deviceId: string = randomUUID();
 
@@ -48,7 +49,7 @@ export class LoginUserUseCase implements ICommandHandler<LoginUserCommand> {
             new CreateSessionCommand(command.ip, command.userAgent, deviceId, command.user.id, issuedAtRefreshToken),
         );
 
-
+        // 5. отдаю токены!
         return {
             jwt: accessToken,
             refresh: refreshToken,

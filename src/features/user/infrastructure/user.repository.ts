@@ -24,7 +24,7 @@ export class UserRepository {
     async findUserByLoginOrEmail(search: string) {
         const result = await this.userRepository
             .createQueryBuilder('u')
-            .select('u.id as id')
+            .select(['u.id as id', 'u.password_hash as password'])
             .where('u.email = :search OR u.login = :search', { search })
             .getRawOne();
 

@@ -29,6 +29,10 @@ import { LoginUserUseCase } from './application/auth/login-user.usecase';
 import { AuthService } from './application/services/auth.service';
 import { SecurityDeviceToUser } from './domain/device.entity';
 import { SessionsRepository } from './infrastructure/session.repository';
+import { CreateSessionUseCase } from './application/auth/create-session.command';
+import { LogoutUserUseCase } from './application/auth/logout-user.usecase';
+import { RefreshTokenUserUseCase } from './application/auth/refresh-token.user.usecase';
+import { ValidateUserUseCase } from './application/auth/validate-user.usecase';
 
 @Module({
     imports: [
@@ -44,6 +48,7 @@ import { SessionsRepository } from './infrastructure/session.repository';
         PassportModule,
         CqrsModule,
     ],
+    exports: [],
     providers: [
         EmailService,
         EmailAdapter,
@@ -66,7 +71,11 @@ import { SessionsRepository } from './infrastructure/session.repository';
         CreateUserUseCase,
         RegistrationConfirmationUserUseCase,
         RegistrationEmailResendUserUseCase,
-        LoginUserUseCase
+        LoginUserUseCase,
+        CreateSessionUseCase,
+        LogoutUserUseCase,
+        RefreshTokenUserUseCase,
+        ValidateUserUseCase,
     ],
     controllers: [UserController, AuthController],
 })
