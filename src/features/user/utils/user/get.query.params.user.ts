@@ -1,24 +1,6 @@
-import { sortDirectionEnum, sortDirectionType } from '../../../../libs/contracts/enums/sort/sort.direction.enum';
-import { entitiesSortByEnum } from '../../../../libs/contracts/enums/sort/filter.params.enum';
+import { sortDirectionEnum } from '../../../../libs/contracts/enums/sort/sort.direction.enum';
 import { UserQueryDto } from '../../dto/user.query.dto';
-
-export interface QueryUsers {
-    sortBy?: entitiesSortByEnum;
-    sortDirection?: sortDirectionType;
-    pageNumber?: number;
-    pageSize?: number;
-    searchLoginTerm?: string | null;
-    searchEmailTerm?: string | null;
-}
-
-export interface QueryUsersOutputInterface {
-    sortBy: string;
-    sortDirection: sortDirectionType;
-    pageNumber: number;
-    pageSize: number;
-    searchLoginTerm: string | null;
-    searchEmailTerm: string | null;
-}
+import { ArticlesQuery } from '../../../../libs/contracts/commands/query/articles.query.command';
 
 export const getUsersQuery = (queryUser: UserQueryDto) => ({
     sortBy: (queryUser.sortBy || 'created_at').toLowerCase() ?? 'created_at',
@@ -29,3 +11,19 @@ export const getUsersQuery = (queryUser: UserQueryDto) => ({
     searchLoginTerm: queryUser.searchLoginTerm ?? '',
     searchEmailTerm: queryUser.searchEmailTerm ?? '',
 });
+
+export const getArticlesQuery = (query: ArticlesQuery) => {
+    return {
+        sortBy: (query.sortBy === 'createdAt' ? 'created_at' : query.sortBy || 'created_at').toLowerCase(), // 'title' или 'createdAt'
+        sortDirection:
+            (query.sortDirection?.toUpperCase() === sortDirectionEnum.enum.ASC
+                ? sortDirectionEnum.enum.ASC
+                : sortDirectionEnum.enum.DESC) || sortDirectionEnum.enum.DESC,
+        pageNumber: query.pageNumber ?? 1,
+        pageSize: query.pageSize ?? 10,
+        searchTitleTerm: query.searchTitleTerm ?? '',
+        authorId: query.authorId ?? null,
+        dateFrom: query.dateFrom ?? null,
+        dateTo: query.dateTo ?? null,
+    };
+};

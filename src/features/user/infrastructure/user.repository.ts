@@ -84,12 +84,6 @@ export class UserRepository {
         const newUser = User.buildInstance(dto);
         return await this.saveUser(newUser);
     }
-
-    async updateUserPassword(entity: User, password: string) {
-        entity.updatePassword(password);
-        return this.saveUser(entity);
-    }
-
     async updateUserConfirmedSendEmail(entity: User) {
         entity.confirmedSendEmailRegistration();
         return this.saveUser(entity);

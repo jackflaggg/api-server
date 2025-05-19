@@ -48,7 +48,7 @@ import { ValidateUserUseCase } from './application/auth/validate-user.usecase';
         PassportModule,
         CqrsModule,
     ],
-    exports: [],
+    exports: [UserRepository],
     providers: [
         EmailService,
         EmailAdapter,

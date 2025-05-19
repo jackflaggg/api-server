@@ -10,6 +10,9 @@ import { typeOrmDb } from './core/config/typeorm.config';
 import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { throttlerConfig } from './core/config/throttler.config';
+import { CacheModule } from '@nestjs/cache-manager';
+import { redisStore } from 'cache-manager-redis-store';
+import { ArticleModule } from './features/article/article.module';
 
 @Module({
     imports: [
@@ -31,7 +34,14 @@ import { throttlerConfig } from './core/config/throttler.config';
             },
         }),
         ThrottlerModule.forRoot([throttlerConfig]),
+        CacheModule.register({
+            store: redisStore,
+            host: 'localhost',
+            port: 6379,
+            ttl: 60,
+        }),
         UserModule,
+        ArticleModule
     ],
     controllers: [AppController],
     providers: [AppService],

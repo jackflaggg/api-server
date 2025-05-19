@@ -14,7 +14,7 @@ export class RegistrationConfirmationUserUseCase implements ICommandHandler<Regi
         private readonly emailConfirmationRepository: EmailConfirmationRepository,
     ) {}
     async execute(command: RegistrationConfirmationUserCommand) {
-        // 1. ищу данный код в таблице, если его нет, то 404
+        // 1. ищу данный код
         const findCode = await this.emailConfirmationRepository.findCodeToEmailRegistration(command.code);
 
         // 2. проверка на истекание кода
