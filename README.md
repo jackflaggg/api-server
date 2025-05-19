@@ -23,10 +23,6 @@ DATABASE_NAME_SQL=your_database_name
 USERNAME_SQL=your_db_user
 PASSWORD_SQL=your_db_password
 
--- для регистрации юзера!
-ADMIN_EMAIL=n3kiii@yandex.ru
-ADMIN_EMAIL_PASSWORD=vrrayvxwzeeqrzva
-
 -- это нужно для bearer авторизации, для роута - users
 ADMIN_USERNAME=admin
 ADMIN_PASS=qwerty
